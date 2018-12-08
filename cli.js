@@ -26,7 +26,7 @@ if (argv["src-dir"] && argv["out-dir"]) {
             ('0' + (dt.getMinutes() + 1)).slice(-2) + ':' +
             ('0' + dt.getSeconds()).slice(-2) + " => " + s));
 
-    }, watcher = chokidar
+    }, watcher = new chokidar
         .watch("**/*." + argv._[0], {
             ignored: /(^|[\/\\])\../,
             cwd: argv["src-dir"],

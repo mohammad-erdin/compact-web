@@ -1,6 +1,6 @@
 {
   "name": "compact-web",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tools for compacting js (uglifyjs and/or babel) and scss to css",
   "bin": {
     "compact-web": "./cli.js"
