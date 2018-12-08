@@ -1,5 +1,5 @@
 
 To compile scss->css
-    `compact-web.cmd scss --output-style compressed --src-dir .\src\style --out-dir .\resources\css --nowatch`
+    `compact-web scss --output-style compressed --src-dir .\src\style --out-dir .\resources\css --nowatch`
 To compile js
-    `compact-web.cmd scss --output-style compressed --src-dir .\src\style --out-dir .\resources\css --nowatch`
+    `compact-web js --babel --uglifyjs --obfuscatejs --src-dir .\src\js --out-dir .\resources\js --nowatch`
