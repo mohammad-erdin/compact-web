@@ -1,12 +1,11 @@
 {
   "name": "compact-web",
-  "version": "1.0.1",
-  "description": "Tools for compacting js (uglifyjs and/or babel) and scss to css",
+  "version": "1.1.0",
+  "description": "Tools for compacting js (uglifyjs and/or babel) and stylesheet (nodes-sass + postcss)",
+  "main": "index.js",
+  "author": "Egy Mohammad Erdin <mohammad.erdin@gmail.com> (https://github.com/mohammad-erdin)",
   "bin": {
     "compact-web": "./cli.js"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -18,22 +17,24 @@
     "scss",
     "sass"
   ],
-  "author": "Egy Mohammad Erdin",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/mohammad-erdin/compact-web/issues"
   },
   "homepage": "https://github.com/mohammad-erdin/compact-web#readme",
   "dependencies": {
-    "@babel/core": "^7.2.0",
+    "@babel/core": "^7.2.2",
     "@babel/plugin-proposal-object-rest-spread": "^7.2.0",
     "@babel/preset-env": "^7.2.0",
     "chalk": "^2.4.1",
     "chokidar": "^2.0.4",
+    "commander": "^2.19.0",
     "javascript-obfuscator": "^0.18.1",
-    "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
-    "node-sass": "^4.10.0",
-    "uglify-es": "^3.3.9"
+    "node-sass": "^4.11.0",
+    "package-exists": "^0.1.4",
+    "postcss": "^7.0.6",
+    "uglify-es": "^3.3.9",
+    "yargs": "^12.0.5"
   }
 }

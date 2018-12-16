@@ -1,32 +1,59 @@
+<h2>Compact-web</h2>
 
-<h2> To compile `.scss` => `.css` </h2>
+Compact-web is a cli package. Basic Usage : 
 
-`compact-web scss [OPTION] `
+```
+compact-web <command>
 
-options :  
-`--output-style` : set the output-style. ex : compressed  
-`--nowatch` : add this option if act as one time running (nowatch).
-`--src-dir [DIR]` : set the source directory to be watched.  
-`--out-dir [DIR]` : set the output destination directory.  
+Commands:
+  script <source> <target> [option]  compact javascript file
+  style <source> <target> [option]   compact stylesheet file
 
-example :  
-    1. `compact-web scss --output-style compressed --nowatch --src-dir ./src/css --out-dir ./resources/css`  
-    2. `compact-web scss --output-style="compressed" --src-dir="./src/css" --out-dir="./resources/css"`  
+Options:
+  -h, --help     Show help             [boolean]
+  -v, --version  Show version number   [boolean]
+```
+
+<h3>Commands</h3>  
+
+* script  
+* style  
 
 
-<h2> To compile `.js` </h2>  
+<h4>script</h4>
 
-`compact-web js [OPTION] `
+```  
+Usage: compact-web script <source> <target> [option]
 
-options :  
-`--babel` : enable babel compiling. Transform from es6 -> es5).  
-`--uglifyjs` : enable uglifyjs compiling. uglify & minify.  
-`--obfuscatejs` : enable obfuscatejs compiling. Encrypt the javascript file with JS-Obfuscator.  
-`--nowatch` : add this option if act as one time running (nowatch).  
-`--src-dir [DIR]` : set the source directory to be watched.  
-`--out-dir [DIR]` : set the output destination directory.  
+Options:
+  -h, --help       Show help                                                [boolean]
+  --cwd            change current directory for <source> base dir           [default: ""]
+  --suffix, -s     string to be added as suffix                             [default: ".min"]
+  --babel, -b      using @babel/core                                        [default: false]
+  --uglify, -u     using uglify-js                                          [default: false]
+  --obfuscate, -o  using javascript obfuscator                              [default: false]
+  --watch, -w      act as watcher. use --no--watch for disabling watcher    [default: true]
+  -v, --version    Show version number                                      [boolean]
+```
 
-example :  
-    1. `compact-web js --babel --uglifyjs --obfuscatejs --src-dir .\src\js --out-dir .\resources\js`  
-    2. `compact-web js --babel --uglifyjs --obfuscatejs --src-dir .\src\js --out-dir .\resources\js --nowatch"`  
-    2. `compact-web js --babel --src-dir .\src\js --out-dir .\resources\js --nowatch"`  
+<h4>style</h4>
+
+```  
+Usage: compact-web style <source> <target> [option]
+
+Options:
+  -h, --help         Show help                                              [boolean]
+  --cwd              change current directory for <source> base dir         [default: ""]
+  --outputstyle, -o  output-style for node-sass
+                     [choices: "nested", "compact", "expanded", "compressed      
+                                                                            [default: "compressed"]
+  --use, -u          array set of PostCSS Plugins to be apllied.
+                     Ex: --use autoprefix cssnano
+                     Ex: --use autoprefix --use cssnano
+                     see https://github.com/postcss/postcss/blob/master/docs/plugins.md#packs
+                     WARNING :: if you use any postcss plugins, YOU MUST add that dependencies manually to your project dir.
+                     Ex: npm install autoprefix cssnano                     [array]
+  --suffix, -s       string to be added as suffix       [default: ""]
+  --watch, -w        act as watcher. use --no--watch for disabling watcher  [default: true]
+  -v, --version      Show version number                                    [boolean]
+```
