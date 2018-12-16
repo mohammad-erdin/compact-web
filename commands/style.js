@@ -65,24 +65,38 @@ exports.handler = async function (argv) {
 			src = path.join(argv.cwd, filename);
 
 		mkdirp.sync(path.dirname(dest));
-		if (fs.existsSync(dest))
-			fs.unlinkSync(dest);
+		// if (fs.existsSync(dest))
+		// 	fs.unlinkSync(dest);
 
-		let count = 10, finalCode = "";
+		let count = 1000, finalCode = "",valid = true;
+
 		while (finalCode == "" && count > 0) {
-			finalCode = nodesass.renderSync({
-				file: src,
-				dest: dest,
-				includePaths: [argv.cwd],
-				indentType: "space",
-				indentWidth: 2,
-				linefeed: "lf",
-				outputStyle: argv.outputstyle
-			}).css.toString();
-			count--;
+			try {
+				finalCode = nodesass.renderSync({
+					file: src,
+					dest: dest,
+					includePaths: [argv.cwd],
+					indentType: "space",
+					indentWidth: 2,
+					linefeed: "lf",
+					outputStyle: argv.outputstyle
+				}).css.toString();
+				valid = true;
+			}catch (err) {
+				if(err.status!=3){
+					count=0;
+					log(err.message, "red");
+				}
+				finalCode = "";
+				valid = false;
+			}finally {
+				count--;
+			}
 		}
 
-		if (finalCode.length > 0 && plugins.length) {
+		if(!valid){
+			log('can\'t compile ' + filename, "red");
+		}else if (finalCode.length > 0 && plugins.length) {
 			postcss(plugins)
 				.process(finalCode, {
 					from: dest,
