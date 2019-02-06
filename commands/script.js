@@ -27,61 +27,54 @@ exports.builder = function (yargs) {
 exports.handler = async function (argv) {
 	let watcher = new chokidar.watch(argv.source, {
 		ignored: /(^|[\/\\])\../,
+		persistent: argv.watch,
 		cwd: argv.cwd,
 	}).on("all", function (event, filename) {
 		let parse = path.parse(filename),
 			dest = path.join(argv.target, path.dirname(filename), parse.name + argv.suffix + parse.ext),
-			src = path.join(argv.cwd, filename),
-			code = fs.readFileSync(src, "utf-8");
+			src = path.join(argv.cwd, filename);
 
-		try {
-			mkdirp.sync(path.dirname(dest));
-			if (fs.existsSync(dest))
-				fs.unlinkSync(dest);
-
-			if (argv.babel) {
-				code = babel.transformSync(code, {
-					"presets": ["@babel/preset-env"],
-					"plugins": ["@babel/plugin-proposal-object-rest-spread"]
-				}).code;
-			}
-			if (argv.uglify) {
-				if (typeof listMangle[parse.name] == "undefined") {
-					listMangle[parse.name] = lastMangleCounter++;
+		fs.copyFile(src, dest, function () {
+			try {
+				if (argv.babel) {
+					fs.writeFileSync(dest, babel.transformFileSync(dest, {
+						"presets": ["@babel/preset-env"],
+						"plugins": ["@babel/plugin-proposal-object-rest-spread"]
+					}).code);
 				}
-				let count = 10, finalCode = "";
-				while (finalCode == "" && count > 0) {
-					finalCode = uglifyJS.minify({ filename: code }).code;
-					count--;
+				if (argv.uglify) {
+					if (typeof listMangle[parse.name] == "undefined") {
+						listMangle[parse.name] = lastMangleCounter++;
+					}
+					let count = 10, finalCode = "";
+					do {
+						finalCode = uglifyJS.minify({ filename: '' + fs.readFileSync(dest, 'utf-8').replace(/ +/g, " ") }).code;
+						count--;
+					} while (finalCode == "" && count > 0);
+					fs.writeFileSync(dest, finalCode);
 				}
-				code = finalCode;
-			}
-
-			if (argv.obfuscate) {
-				let count = 10, finalCode = "";
-				while (finalCode == "" && count > 0) {
-					finalCode = JSO.obfuscate(code, {
-						compact: true,
-						controlFlowFlattening: true,
-						identifierNamesGenerator: 'mangled',
-						identifiersPrefix: '_' + listMangle[parse.name].toString(36),
-					}).getObfuscatedCode();
-					count--;
+				if (argv.obfuscate) {
+					let count = 10, finalCode = "";
+					do {
+						finalCode = JSO.obfuscate(fs.readFileSync(dest, 'utf-8').replace(/ +/g, " "), {
+							compact: true,
+							controlFlowFlattening: true,
+							identifierNamesGenerator: 'mangled',
+							identifiersPrefix: '_' + parse.name.substr(0, 3) + listMangle[parse.name].toString(36),
+						}).getObfuscatedCode();
+						count--;
+					} while (finalCode == "" && count > 0);
+					fs.writeFileSync(dest, finalCode);
 				}
-				code = finalCode;
+			} catch (error) {
+				log('can\'t compile ' + filename + '. ' + error.message, "red");
+			} finally {
+				if (fs.existsSync(dest)) log(`compiling ${event} file from ${src} to ${dest}`, "green");
+				else log('can\'t compile ' + filename, "red");
 			}
-			fs.writeFileSync(dest, code, function (err) {
-				if (err) log(filename + ' ' + err.toString(), "red");
-			});
-		} catch (error) {
-			log('can\'t compile ' + filename + '. ' + error.message, "red");
-		}
-		if (fs.existsSync(dest)) log(`compiling ${event} file from ${src} to ${dest}`, "green");
-		else log('can\'t compile ' + filename, "red");
+		});
 
-	}).on("ready", () => {
-		if (!argv.watch) watcher.close();
-	});
+	})
 }
 
 

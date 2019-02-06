@@ -1,6 +1,6 @@
 {
   "name": "compact-web",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Tools for compacting js (uglifyjs and/or babel) and stylesheet (nodes-sass + postcss)",
   "main": "index.js",
   "author": "Egy Mohammad Erdin <mohammad.erdin@gmail.com> (https://github.com/mohammad-erdin)",
