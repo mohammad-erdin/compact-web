@@ -1,6 +1,6 @@
 {
   "name": "compact-web",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Tools for compacting js (uglifyjs and/or babel) and stylesheet (nodes-sass + postcss)",
   "main": "index.js",
   "author": "Egy Mohammad Erdin <mohammad.erdin@gmail.com> (https://github.com/mohammad-erdin)",
@@ -26,6 +26,7 @@
     "@babel/core": "^7.2.2",
     "@babel/plugin-proposal-object-rest-spread": "^7.2.0",
     "@babel/preset-env": "^7.2.0",
+    "babel-preset-minify": "^0.5.0",
     "chalk": "^2.4.1",
     "chokidar": "^2.0.4",
     "commander": "^2.19.0",

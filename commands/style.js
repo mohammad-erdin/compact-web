@@ -28,11 +28,11 @@ exports.builder = function (yargs) {
 			alias: 'u',
 			array: true,
 			desc: "array set of PostCSS Plugins to be apllied. \n" +
-				"Ex: --use autoprefix cssnano\n " +
-				"Ex: --use autoprefix --use cssnano\n " +
+				"Ex: --use autoprefixer cssnano\n " +
+				"Ex: --use autoprefixer --use cssnano\n " +
 				"see https://github.com/postcss/postcss/blob/master/docs/plugins.md#packs\n" +
 				"WARNING :: if you use any postcss plugins, YOU MUST add that dependencies manually to your project dir.\n" +
-				"Ex: npm install autoprefix cssnano\n "
+				"Ex: npm install autoprefixer cssnano\n "
 		})
 		.option("suffix", { alias: 's', default: '', desc: "string to be added as suffix" })
 		.option("watch", { alias: 'w', default: true, desc: "act as watcher. use --no--watch for disabling watcher" })
