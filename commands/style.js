@@ -3,12 +3,12 @@ const path = require("path");
 const chalk = require("chalk");
 const mkdirp = require("mkdirp");
 const postcss = require('postcss');
-const chokidar = require("chokidar");
 const nodesass = require('node-sass');
 const exists = require("package-exists");
+const Gaze = require('gaze');
+const grapher = require('sass-graph');
 
-// var listMangle = {},
-// 	lastMangleCounter = 0;
+
 
 exports.command = 'style <source> <target> [option]'
 exports.describe = 'compact stylesheet file'
@@ -39,11 +39,9 @@ exports.builder = function (yargs) {
 	return yargs;
 }
 exports.handler = async function (argv) {
-
-	//if using --use, check if that package is exists 
-	let plugins = [];
+	let plugins = [],
+		listGaze = [];
 	if (argv.use && argv.use.length) {
-
 		argv.use.forEach(pl => {
 			plugins.push(require(pl));
 			if (!exists.npmexists(pl))
@@ -52,79 +50,100 @@ exports.handler = async function (argv) {
 		});
 	}
 
+	let lookDir = path.join(argv.cwd, argv.source);
+	let registerFile = function (files) {
+		listGaze.forEach(g => { g.close(); });
+		files.forEach(file => {
+			let filename = path.relative(argv.cwd, file),
+				parse = path.parse(filename),
+				dest = path.join(argv.target, path.dirname(filename), parse.name + argv.suffix + ".css"),
+				src = path.join(argv.cwd, filename);
+			if (parse.name.startsWith("_")) {
+				return false;
+			} else {
+				var graph = grapher.parseFile(src, {
+					loadPaths: [path.join(path.resolve(argv.cwd), path.dirname(filename))],
+					extensions: ['scss', 'sass', 'css'],
+					follow: false,
+				});
 
-	let watcher = new chokidar.watch(argv.source, {
-		ignored: /(^|[\/\\])\../,
-		cwd: argv.cwd,
-	}).on("all", function (event, filename) {
-		if (filename.startsWith("_"))
-			return false;
-
-		let parse = path.parse(filename),
-			dest = path.join(argv.target, path.dirname(filename), parse.name + argv.suffix + ".css"),
-			src = path.join(argv.cwd, filename);
-
-		mkdirp.sync(path.dirname(dest));
-		// if (fs.existsSync(dest))
-		// 	fs.unlinkSync(dest);
-
-		let count = 1000, finalCode = "",valid = true;
-
-		while (finalCode == "" && count > 0) {
-			try {
-				finalCode = nodesass.renderSync({
-					file: src,
-					dest: dest,
-					includePaths: [argv.cwd],
-					indentType: "space",
-					indentWidth: 2,
-					linefeed: "lf",
-					outputStyle: argv.outputstyle
-				}).css.toString();
-				valid = true;
-			}catch (err) {
-				if(err.status!=3){
-					count=0;
-					log(err.message, "red");
-				}
-				finalCode = "";
-				valid = false;
-			}finally {
-				count--;
-			}
-		}
-
-		if(!valid){
-			log('can\'t compile ' + filename, "red");
-		}else if (finalCode.length > 0 && plugins.length) {
-			postcss(plugins)
-				.process(finalCode, {
-					from: dest,
-					to: dest
-				})
-				.then(result => {
-					fs.writeFileSync(dest, result.css, function (err) {
-						if (err) log(filename + ' ' + err.toString(), "red");
+				var gaze = new Gaze();
+				gaze.add(Object.keys(graph.index));
+				gaze.on('all', function (event, file) {
+					let me = this;
+					nodesass.render({
+						errorBell: false,
+						follow: false,
+						indentedSyntax: false,
+						omitSourceMapUrl: false,
+						quiet: false,
+						recursive: true,
+						sourceMapEmbed: false,
+						sourceMapContents: false,
+						sourceComments: false,
+						outputStyle: argv.outputstyle,
+						includePath: [path.join(path.resolve(argv.cwd), path.dirname(filename))],
+						indentType: 'space',
+						indentWidth: 2,
+						linefeed: 'lf',
+						precision: 5,
+						file: src
+					}, function (error, result) {
+						if (!error) {
+							mkdirp.sync(path.dirname(dest));
+							
+							fs.writeFile(dest, result.css, function (err, fd) {
+								if (!err) {
+									postcss(plugins)
+									.process(result.css, {
+										from: dest,
+										to: dest
+									})
+									.then(result => {
+										fs.writeFileSync(dest, result.css, function (err) {
+											if (err) log(filename + ' ' + err.toString(), "red");
+										});
+										destInfo = path.join(
+											path.relative(process.cwd(), argv.target),
+											path.dirname(filename), parse.name + argv.suffix + ".css");
+										log(`compiling ${event} file from ${src} to ${destInfo}`, "green");
+									})
+								} else {
+									log(err, "red");
+								}
+							});
+						} else {
+							log(error.message, "red");
+							setTimeout(function () {
+								log('Retrying to save...', "yellow");
+								me.emit('added', file);
+							}, 50)
+						}
 					});
-					if (fs.existsSync(dest)) log(`compiling ${event} file from ${src} to ${dest}`, "green");
-					else log('can\'t compile ' + filename, "red");
-
-					//TODO: add option to enable .map
-					// if (result.map) {
-					// 	fs.writeFile('dest/app.css.map', result.map, () => true)
-					// }
 				})
-		} else {
-			fs.writeFileSync(dest, finalCode, function (err) {
-				if (err) log(filename + ' ' + err.toString(), "red");
-			});
-			if (fs.existsSync(dest)) log(`compiling ${event} file from ${src} to ${dest}`, "green");
-			else log('can\'t compile ' + filename, "red");
-		}
+				var watched = gaze.watched();
+				watched = watched[Object.keys(watched)[0]][0];
+				gaze.emit('added', watched);
+				listGaze.push(gaze);
+			}
+		});
 
-	}).on("ready", () => {
-		if (!argv.watch) watcher.close();
-	});
+	}
+	Gaze(lookDir, function (err, watcher) {
+		this.on('added', function (filepath) {
+			var watched = this.watched();
+			watched = watched[Object.keys(watched)[0]];
+			registerFile(watched);
+		});
+		this.on('deleted', function (filepath) {
+			var watched = this.watched();
+			watched = watched[Object.keys(watched)[0]];
+			registerFile(watched);
+		});
+		var watched = this.watched();
+		watched = watched[Object.keys(watched)[0]];
+		registerFile(watched);
+	})
 }
 
 
