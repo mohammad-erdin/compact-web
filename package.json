@@ -32,7 +32,7 @@
     "commander": "^2.19.0",
     "javascript-obfuscator": "^0.18.1",
     "mkdirp": "^0.5.1",
-    "node-sass": "^4.11.0",
+    "node-sass": "^7.0.0",
     "package-exists": "^0.1.4",
     "postcss": "^8.2.10",
     "uglify-es": "^3.3.9",
